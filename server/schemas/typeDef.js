@@ -28,15 +28,29 @@ const typeDefs = gql`
     friends: [User]
   }
 
+  type Auth {
+    token: ID!
+    user: User
+  }
+
   type Query {
+    me: User
     users: [User]
     user(username: String!): User
     thoughts(username: String): [Thought]
     thought(_id: ID!): Thought
   }
+
+  type Mutation {
+    login(email: String!, password: String!): Auth
+    addUser(username: String!, email: String!, password: String!): Auth
+    addThought(thoughtText: String!): Thought
+    addReaction(thoughtId: ID!, reactionBody: String!): Thought
+    addFriend(friendId: ID!): User
+  }
 `;
 // ID is the same as string, except it must be a unique identifier
-// the ! indicates the data MUST exist otherwise apollo will return an error
+// the ! indicates a required argument; the data MUST be entered otherwise apollo will return an error
 
 // export the typeDefs
 module.exports = typeDefs;
