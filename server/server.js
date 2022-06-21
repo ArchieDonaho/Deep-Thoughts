@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 // import apollo server
 const { ApolloServer } = require('apollo-server-express');
 
@@ -29,6 +30,17 @@ const startApolloServer = async (typeDefs, resolvers) => {
   await server.start();
   // integrate our apollo server with the express application as middleware, creating a "/graphql" endpoint
   server.applyMiddleware({ app });
+
+  // serve up static assets
+  if (process.env.NODE_ENV === 'production') {
+    // instruct the express.js server to serve any files in the react apps build directory in the client folder
+    app.use(express.static(path.join(__dirname, '../client/build')));
+  }
+
+  // if a user makes a get request to any location that  isn't explicitly defined, respond with the production-ready react front end code
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+  });
 
   db.once('open', () => {
     app.listen(PORT, () => {
