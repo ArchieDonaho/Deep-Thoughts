@@ -5,6 +5,7 @@ import {
   InMemoryCache, // enables Apollo client instance to cache API response data
   createHttpLink, // allows us to control how the Apollo client makes a request, like middleware
 } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context'; // used as middleware that will retrieve the token from localStorage and combine it with the existing 'httpLink'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -21,8 +22,23 @@ const httpLink = createHttpLink({
   uri: '/graphql', // we use the "proxy" element in package.json to allow us to use relative pathing on production and final development
 });
 
+// middleware that will retrieve the token from localStorage and combine it with the existing 'httpLink'
+const authLink = setContext((_, { headers }) => {
+  // the "_" is used as a placeholder since we don't need the "req" object.
+  // retrieve the token from localStorage
+  const token = localStorage.getItem('id_token');
+  return {
+    // set the HTTP request headers of every request to include the token
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
+    },
+  };
+});
+
 const client = new ApolloClient({
-  link: httpLink,
+  // combine the authLink & httpLink so that every request retrieves the token and sets the request headers before making the request to the API
+  link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
 });
 

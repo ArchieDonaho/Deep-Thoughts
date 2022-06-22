@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useMutation } from '@apollo/client';
+import { LOGIN_USER } from '../utils/mutations';
+import Auth from '../utils/auth';
 
 const Login = (props) => {
   const [formState, setFormState] = useState({ email: '', password: '' });
@@ -13,9 +16,24 @@ const Login = (props) => {
     });
   };
 
+  // initialize our login mutation
+  const [login, { error }] = useMutation(LOGIN_USER);
+
   // submit form
   const handleFormSubmit = async (event) => {
     event.preventDefault();
+
+    try {
+      const { data } = await login({
+        // here we use the ... operator to define the variable's key-value pairs to be the same as formData's
+        variables: { ...formState },
+      });
+
+      // set token to localStorage and reload page to homepage
+      Auth.login(data.login.token);
+    } catch (e) {
+      console.error(e);
+    }
 
     // clear form values
     setFormState({
@@ -53,6 +71,7 @@ const Login = (props) => {
                 Submit
               </button>
             </form>
+            {error && <div>Login failed</div>}
           </div>
         </div>
       </div>
